@@ -629,7 +629,7 @@ function goto(page, btn){
 /* ═══════════════════════════════════════
    API
 ═══════════════════════════════════════ */
-const BACKEND_URL="http://https://studyos-b4fl.onrender.com";
+const BACKEND_URL="http://bosser.onrender.com";
 async function callClaude(prompt,system=''){
   const res=await fetch(`${BACKEND_URL}/api/chat`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}],system})});
   const data=await res.json();
