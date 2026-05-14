@@ -630,6 +630,52 @@ function goto(page, btn){
    API
 ═══════════════════════════════════════ */
 const BACKEND_URL="https://bosser.onrender.com";
+// ── SYSTÈME DE NOTATION ──
+let sessionStart = Date.now();
+let ratingShown = false;
+
+// Vérifie toutes les minutes si 1h s'est écoulée
+setInterval(() => {
+  const elapsed = (Date.now() - sessionStart) / 1000 / 60; // en minutes
+  if (elapsed >= 1 && !ratingShown) {
+    ratingShown = true;
+    showRatingPopup();
+  }
+}, 60000);
+
+function showRatingPopup() {
+  document.getElementById('ratingPopup').style.display = 'flex';
+}
+
+function setRating(note) {
+  document.querySelectorAll('.star-btn').forEach((s, i) => {
+    s.style.color = i < note ? '#fbbf24' : 'var(--muted)';
+  });
+  document.getElementById('ratingPopup').dataset.note = note;
+}
+
+async function submitRating() {
+  const note = document.getElementById('ratingPopup').dataset.note;
+  const commentaire = document.getElementById('ratingComment').value.trim();
+  const duree = Math.round((Date.now() - sessionStart) / 1000 / 60) + ' min';
+
+  if (!note) return alert('Donne une note d\'abord !');
+
+  try {
+    await fetch(`${BACKEND_URL}/api/rating`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: parseInt(note), commentaire, duree })
+    });
+  } catch(e) {}
+
+  document.getElementById('ratingPopup').style.display = 'none';
+  alert('Merci pour ton avis ! 🙏');
+}
+
+function closeRating() {
+  document.getElementById('ratingPopup').style.display = 'none';
+}
 async function callClaude(prompt,system=''){
   const res=await fetch(`${BACKEND_URL}/api/chat`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}],system})});
   const data=await res.json();
@@ -853,5 +899,27 @@ async function genPlanning(){
   }catch{result.innerHTML=`<p style="color:var(--danger)">Erreur. Réessaie.</p>`;result.style.display='block';}
 }
 </script>
+
+<!-- POPUP NOTATION -->
+<div id="ratingPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:360px;width:100%;text-align:center;animation:fadeUp .3s ease;">
+    <div style="font-size:36px;margin-bottom:12px">⭐</div>
+    <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Tu aimes StudyOS ?</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px">Donne-nous ton avis, ça nous aide à améliorer l'app !</div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:16px">
+      <button class="star-btn" onclick="setRating(1)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
+      <button class="star-btn" onclick="setRating(2)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
+      <button class="star-btn" onclick="setRating(3)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
+      <button class="star-btn" onclick="setRating(4)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
+      <button class="star-btn" onclick="setRating(5)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
+    </div>
+    <textarea id="ratingComment" placeholder="Un commentaire ? (optionnel)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:12px;outline:none;resize:none;margin-bottom:14px" rows="3"></textarea>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeRating()">Plus tard</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitRating()">Envoyer 🙏</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
