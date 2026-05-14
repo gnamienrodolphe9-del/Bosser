@@ -61,7 +61,7 @@ app.post('/api/rating', async (req, res) => {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'Sheet1!A:D',
+      range: 'Feuille1!A:D',
       valueInputOption: 'RAW',
       requestBody: {
         values: [[date, note, commentaire || '', duree || '']]
@@ -81,7 +81,7 @@ app.get('/api/stats', async (req, res) => {
     const sheets = google.sheets({ version: 'v4', auth });
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'Sheet1!A:D',
+      range: 'Feuille1!A:D',
     });
 
     const rows = response.data.values || [];
