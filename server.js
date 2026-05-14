@@ -3,14 +3,20 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+
+// Autoriser toutes les origines
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
 
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, system } = req.body;
 
-    // Ajoute le system prompt comme premier message si présent
     const fullMessages = system
       ? [{ role: 'system', content: system }, ...messages]
       : messages;
@@ -30,8 +36,6 @@ app.post('/api/chat', async (req, res) => {
 
     const data = await response.json();
 
-    // On reformate la réponse pour que le frontend
-    // la reçoive dans le même format qu'avant
     res.json({
       content: [{
         type: 'text',
