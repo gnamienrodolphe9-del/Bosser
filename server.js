@@ -70,7 +70,7 @@ app.post('/api/rating', async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Erreur rating:', error);
+    console.error('Erreur rating complète:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     res.status(500).json({ error: 'Erreur enregistrement' });
   }
 });
