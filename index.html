@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" id="themeColor" content="#0d0f14">
+<meta name="theme-color" id="themeColor" content="#01123d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="StudyOS">
@@ -11,10 +12,14 @@
 <link rel="manifest" id="pwaManifest">
 <title>StudyOS — Révise plus fort</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<!-- jsPDF pour export PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* ══ TOKENS DARK ══ */
 :root {
-  --bg:#0d0f14; --surface:#13161e; --surface2:#1a1e2a; --border:#252a38;
+  --bg:#01123d; --surface:#011753; --surface2:#1a1e2a; --border:#252a38;
   --accent:#6ee7b7; --accent2:#818cf8; --accent3:#f472b6;
   --text:#e8eaf2; --text2:#a0a8c0; --muted:#6b7280; --danger:#f87171;
   --shadow:0 4px 24px rgba(0,0,0,.4);
@@ -23,7 +28,7 @@
 }
 /* ══ TOKENS LIGHT ══ */
 [data-theme="light"] {
-  --bg:#f0f2f8; --surface:#ffffff; --surface2:#f4f6fc; --border:#dde1f0;
+  --bg:#dffafa; --surface:#f1fcf6; --surface2:#ffffff; --border:#dde1f0;
   --accent:#059669; --accent2:#6366f1; --accent3:#db2777;
   --text:#111827; --text2:#374151; --muted:#9ca3af; --danger:#dc2626;
   --shadow:0 4px 24px rgba(0,0,0,.08);
@@ -34,70 +39,54 @@ html,body{height:100%;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;transition:background .3s,color .3s;}
 [data-theme="dark"] body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.35;}
 
-/* ══════════════════════════════════════
-   LAYOUT DESKTOP (sidebar gauche)
-══════════════════════════════════════ */
+/* ══ LUCIDE ICONS ══ */
+.icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.icon svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.icon-sm svg{width:16px;height:16px;}
+.icon-lg svg{width:24px;height:24px;}
+
+/* ══ LAYOUT ══ */
 .app{display:flex;min-height:100vh;}
 
-.sidebar{
-  width:72px;background:var(--surface);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;align-items:center;
-  padding:20px 0;gap:6px;flex-shrink:0;z-index:100;
-  position:fixed;top:0;left:0;height:100vh;
-  transition:background .3s,border-color .3s;
-}
+/* ══ SIDEBAR ══ */
+.sidebar{width:72px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:6px;flex-shrink:0;z-index:100;position:fixed;top:0;left:0;height:100vh;transition:background .3s,border-color .3s;}
 .logo{font-family:var(--font-head);font-size:10px;font-weight:800;color:var(--accent);letter-spacing:2px;writing-mode:vertical-rl;transform:rotate(180deg);margin-bottom:20px;margin-top:8px;}
-.nav-btn{width:44px;height:44px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all .2s;position:relative;}
+.nav-btn{width:44px;height:44px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative;}
 .nav-btn:hover{background:var(--surface2);color:var(--text);}
 .nav-btn.active{background:var(--surface2);border-color:var(--border);color:var(--accent);}
 .nav-btn .tip{position:absolute;left:58px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;font-family:var(--font-body);box-shadow:var(--shadow);z-index:200;}
 .nav-btn:hover .tip{opacity:1;}
 .sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:6px;align-items:center;}
-.theme-toggle{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;position:relative;}
+.theme-toggle{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative;}
 .theme-toggle .tip{position:absolute;left:58px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;font-family:var(--font-body);box-shadow:var(--shadow);z-index:200;}
 .theme-toggle:hover .tip{opacity:1;}
 .theme-toggle:hover{border-color:var(--accent2);}
 
-/* ══ MAIN CONTENT ══ */
-.main{
-  margin-left:72px;
-  flex:1;
-  min-height:100vh;
-  padding:28px 28px 40px;
-  display:flex;flex-direction:column;gap:20px;
-  overflow-y:auto;
-}
-
-/* ══ BOTTOM NAV (mobile uniquement) ══ */
+/* ══ MAIN ══ */
+.main{margin-left:72px;flex:1;min-height:100vh;padding:28px 28px 40px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
 .bottom-nav{display:none;}
 
-/* ══════════════════════════════════════
-   TOPBAR
-══════════════════════════════════════ */
+/* ══ TOPBAR ══ */
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;}
 .page-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--text);line-height:1.2;}
 .page-title span{color:var(--accent);}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid;white-space:nowrap;}
 .badge-free{color:var(--muted);border-color:var(--border);}
-/* Bouton thème dans topbar (mobile) */
-.topbar-theme{display:none;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+.topbar-theme{display:none;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;align-items:center;justify-content:center;transition:all .2s;}
 
-/* ══════════════════════════════════════
-   PANELS
-══════════════════════════════════════ */
+/* ══ PANELS ══ */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;display:none;flex-direction:column;gap:18px;animation:fadeUp .3s ease;transition:background .3s,border-color .3s;}
 .panel.active{display:flex;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-/* ══════════════════════════════════════
-   HOME
-══════════════════════════════════════ */
+/* ══ HOME - STATS ══ */
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 10px;text-align:center;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 10px;text-align:center;transition:background .3s;}
 .stat-num{font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--accent);}
 .stat-label{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.3;}
 
+/* ══ HOME GRID ══ */
 .home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px;}
 .home-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
 .home-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;}
@@ -108,15 +97,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflo
 .home-card.c5::before{background:radial-gradient(circle at top left,rgba(56,189,248,.13),transparent 60%);}
 .home-card:hover{border-color:var(--accent2);transform:translateY(-2px);}
 .home-card:hover::before{opacity:1;}
-.card-icon{font-size:24px;margin-bottom:10px;display:block;}
+.card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.card-icon.ci1{background:rgba(110,231,183,.15);color:var(--accent);}
+.card-icon.ci2{background:rgba(129,140,248,.15);color:var(--accent2);}
+.card-icon.ci3{background:rgba(244,114,182,.15);color:var(--accent3);}
+.card-icon.ci4{background:rgba(251,191,36,.15);color:#fbbf24;}
+.card-icon.ci5{background:rgba(56,189,248,.15);color:#38bdf8;}
 .card-title{font-family:var(--font-head);font-size:13px;font-weight:700;margin-bottom:5px;line-height:1.3;}
 .card-desc{font-size:12px;color:var(--muted);line-height:1.5;}
-/* Card pleine largeur (5e card) */
 .home-card.full{grid-column:1/-1;}
 
-/* ══════════════════════════════════════
-   FORMS
-══════════════════════════════════════ */
+/* ══ FORMS ══ */
 .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;}
 textarea,.input-field{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:15px;padding:13px 14px;outline:none;transition:border-color .2s,background .3s;line-height:1.6;}
 textarea{resize:vertical;min-height:120px;}
@@ -125,34 +116,54 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 .select-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:12px 14px;outline:none;cursor:pointer;transition:border-color .2s,background .3s;}
 .select-input:focus{border-color:var(--accent2);}
 
-/* ══════════════════════════════════════
-   BUTTONS
-══════════════════════════════════════ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 22px;border-radius:11px;border:none;font-family:var(--font-head);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.3px;white-space:nowrap;}
+/* ══ BUTTONS ══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border-radius:11px;border:none;font-family:var(--font-head);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.3px;white-space:nowrap;}
 .btn-primary{background:var(--accent);color:#0d0f14;}
 .btn-primary:hover{opacity:.88;transform:translateY(-1px);}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-ghost:hover{border-color:var(--accent2);color:var(--accent2);}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.3);}
 .btn-full{width:100%;}
-.btn-sm{padding:8px 16px;font-size:12px;}
+.btn-sm{padding:7px 14px;font-size:12px;}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;}
 .row-full{display:flex;flex-direction:column;gap:10px;}
 
-/* ══════════════════════════════════════
-   RESULT BOX
-══════════════════════════════════════ */
+/* ══ PDF IMPORT ══ */
+.pdf-section{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.pdf-tabs{display:flex;gap:8px;}
+.pdf-tab{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.pdf-tab.active{border-color:var(--accent);background:rgba(110,231,183,.1);color:var(--accent);font-weight:600;}
+.pdf-upload-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.pdf-upload-zone:hover{border-color:var(--accent2);background:rgba(129,140,248,.05);}
+.pdf-upload-zone .icon{color:var(--muted);}
+.pdf-upload-zone p{font-size:13px;color:var(--muted);}
+.pdf-upload-zone strong{color:var(--text);font-size:14px;}
+.pdf-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;}
+.pdf-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .2s;}
+.pdf-item:hover{border-color:var(--accent2);}
+.pdf-item.selected{border-color:var(--accent);background:rgba(110,231,183,.07);}
+.pdf-item-icon{color:var(--danger);flex-shrink:0;}
+.pdf-item-name{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pdf-item-size{font-size:11px;color:var(--muted);flex-shrink:0;}
+.pdf-selected-info{background:rgba(110,231,183,.08);border:1px solid rgba(110,231,183,.2);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--accent);display:none;align-items:center;gap:8px;}
+.pdf-selected-info.show{display:flex;}
+
+/* ══ EXPORT PDF ══ */
+.export-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;border:1px solid var(--accent2);background:rgba(129,140,248,.1);color:var(--accent2);font-family:var(--font-head);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.export-btn:hover{background:rgba(129,140,248,.2);}
+
+/* ══ RESULT BOX ══ */
 .result-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;font-size:14px;line-height:1.8;display:none;animation:fadeUp .3s ease;}
 .result-box.show{display:block;}
-.result-box h3{font-family:var(--font-head);font-size:15px;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.result-box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.result-box h3{font-family:var(--font-head);font-size:15px;color:var(--accent);}
 .result-box p{color:var(--text);margin-bottom:10px;}
 .result-box ul{padding-left:18px;}
 .result-box li{color:var(--text);margin-bottom:8px;}
 .result-box strong{color:var(--accent2);}
 
-/* ══════════════════════════════════════
-   EXERCICES
-══════════════════════════════════════ */
+/* ══ EXERCICES ══ */
 .exo-block{margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);}
 .exo-block:last-child{border-bottom:none;margin-bottom:0;}
 .exo-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
@@ -163,17 +174,13 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 .exo-correction.show{display:block;}
 .correction-label{font-size:11px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
 
-/* ══════════════════════════════════════
-   LOADER
-══════════════════════════════════════ */
+/* ══ LOADER ══ */
 .loader{display:none;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:14px 0;}
 .loader.show{display:flex;}
 .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ══════════════════════════════════════
-   QUIZ
-══════════════════════════════════════ */
+/* ══ QUIZ ══ */
 .quiz-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:none;flex-direction:column;gap:16px;animation:fadeUp .3s ease;}
 .quiz-card.show{display:flex;}
 .question-text{font-family:var(--font-head);font-size:16px;font-weight:600;line-height:1.5;color:var(--text);}
@@ -194,11 +201,9 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 .score-big{font-family:var(--font-head);font-size:56px;font-weight:800;color:var(--accent);}
 .score-label{font-size:15px;color:var(--muted);}
 
-/* ══════════════════════════════════════
-   TYPE PILLS
-══════════════════════════════════════ */
+/* ══ TYPE PILLS ══ */
 .type-pills{display:flex;gap:8px;flex-wrap:wrap;}
-.pill{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;cursor:pointer;transition:all .2s;font-family:var(--font-body);}
+.pill{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;cursor:pointer;transition:all .2s;font-family:var(--font-body);display:flex;align-items:center;gap:6px;}
 .pill:hover{border-color:var(--accent2);color:var(--accent2);}
 .pill.active{border-color:var(--accent);background:rgba(110,231,183,.1);color:var(--accent);font-weight:600;}
 
@@ -208,9 +213,7 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 .badge-devoir{background:rgba(244,114,182,.1);color:var(--accent3);border:1px solid rgba(244,114,182,.3);}
 .badge-examen{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.3);}
 
-/* ══════════════════════════════════════
-   CHAT
-══════════════════════════════════════ */
+/* ══ CHAT ══ */
 .glow-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite;flex-shrink:0;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .chat-area{display:flex;flex-direction:column;gap:14px;}
@@ -219,9 +222,9 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 .messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .msg{display:flex;gap:9px;animation:fadeUp .25s ease;}
 .msg.user{flex-direction:row-reverse;}
-.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-.msg.ai .msg-avatar{background:rgba(110,231,183,.15);}
-.msg.user .msg-avatar{background:rgba(129,140,248,.15);}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.msg.ai .msg-avatar{background:rgba(110,231,183,.15);color:var(--accent);}
+.msg.user .msg-avatar{background:rgba(129,140,248,.15);color:var(--accent2);}
 .msg-bubble{max-width:80%;padding:12px 15px;border-radius:14px;font-size:14px;line-height:1.65;}
 .msg.ai .msg-bubble{background:var(--surface2);border:1px solid var(--border);border-top-left-radius:4px;color:var(--text);}
 .msg.user .msg-bubble{background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.3);border-top-right-radius:4px;color:var(--text);}
@@ -231,104 +234,52 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 .chat-input:focus{border-color:var(--accent2);}
 .chat-input::placeholder{color:var(--muted);}
 
-/* ══════════════════════════════════════
-   PLANNING
-══════════════════════════════════════ */
+/* ══ PLANNING ══ */
 .week-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
 .day-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;}
 .day-name{font-family:var(--font-head);font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
 .day-task{color:var(--text);line-height:1.5;margin-bottom:3px;font-size:12px;}
 .day-duration{color:var(--muted);font-size:11px;}
 
-/* ══════════════════════════════════════
-   INSTALL BANNER
-══════════════════════════════════════ */
+/* ══ INSTALL BANNER ══ */
 #installBanner{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:16px 20px;align-items:center;justify-content:space-between;gap:12px;z-index:600;box-shadow:var(--shadow);}
 #installBanner.show{display:flex;}
 .install-text{font-size:14px;color:var(--text2);}
 .install-text strong{color:var(--text);font-family:var(--font-head);}
 .install-actions{display:flex;gap:8px;flex-shrink:0;}
 
-/* ══════════════════════════════════════
-   MOBILE — breakpoint 768px
-══════════════════════════════════════ */
+/* ══ RESUME BOX ══ */
+.resume-box{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:14px;line-height:1.75;animation:fadeUp .3s ease;}
+.resume-box.show{display:block;}
+.resume-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.resume-title{font-family:var(--font-head);font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px;}
+.resume-content{color:var(--text2);}
+.resume-footer{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ══ MOBILE ══ */
 @media(max-width:768px){
-
-  /* Masquer la sidebar desktop */
   .sidebar{display:none;}
-
-  /* Main prend toute la largeur */
-  .main{
-    margin-left:0;
-    padding:16px 16px calc(var(--bottom-nav-h) + 16px);
-    gap:16px;
-  }
-
-  /* Afficher le bouton thème dans topbar */
+  .main{margin-left:0;padding:16px 16px calc(var(--bottom-nav-h) + 16px);gap:16px;}
   .topbar-theme{display:flex;}
-
-  /* Titre plus petit */
   .page-title{font-size:19px;}
-
-  /* ── BOTTOM NAV ── */
-  .bottom-nav{
-    display:flex;
-    position:fixed;bottom:0;left:0;right:0;
-    height:var(--bottom-nav-h);
-    background:var(--surface);
-    border-top:1px solid var(--border);
-    z-index:500;
-    align-items:stretch;
-    padding:0 4px;
-    padding-bottom:env(safe-area-inset-bottom);
-  }
-  .bnav-btn{
-    flex:1;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:4px;
-    border:none;background:transparent;
-    color:var(--muted);cursor:pointer;
-    padding:6px 2px;
-    border-radius:10px;
-    transition:all .2s;
-    font-family:var(--font-body);
-  }
-  .bnav-btn .bnav-icon{font-size:22px;line-height:1;}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:var(--bottom-nav-h);background:var(--surface);border-top:1px solid var(--border);z-index:500;align-items:stretch;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
+  .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;background:transparent;color:var(--muted);cursor:pointer;padding:6px 2px;border-radius:10px;transition:all .2s;font-family:var(--font-body);}
+  .bnav-btn .bnav-icon{display:flex;align-items:center;justify-content:center;width:36px;height:28px;border-radius:8px;}
   .bnav-btn .bnav-label{font-size:10px;font-weight:500;line-height:1;}
   .bnav-btn.active{color:var(--accent);}
-  .bnav-btn.active .bnav-icon{
-    background:rgba(110,231,183,.12);
-    border-radius:10px;
-    padding:4px 10px;
-  }
-
-  /* Cards home : 2 colonnes bien remplies */
+  .bnav-btn.active .bnav-icon{background:rgba(110,231,183,.12);}
   .home-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
   .home-card{padding:16px 14px;}
-  .card-icon{font-size:22px;margin-bottom:8px;}
   .card-title{font-size:13px;}
   .card-desc{font-size:11px;}
-
-  /* Stats */
   .stat-num{font-size:24px;}
-
-  /* Panels */
   .panel{padding:16px;gap:14px;}
-
-  /* Messages chat plus larges */
   .msg-bubble{max-width:88%;}
   .messages{height:320px;}
-
-  /* Planning grid : 2 colonnes sur mobile */
   .week-grid{grid-template-columns:repeat(2,1fr);}
-
-  /* Boutons pleine largeur sur mobile */
   .btn-mobile-full{width:100%;}
-
-  /* Install banner au-dessus du bottom nav */
   #installBanner{bottom:var(--bottom-nav-h);flex-direction:column;text-align:center;gap:10px;}
 }
-
 @media(max-width:380px){
   .home-grid{grid-template-columns:1fr;}
   .stats-row{grid-template-columns:repeat(3,1fr);}
@@ -341,15 +292,39 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
   <!-- ══ SIDEBAR DESKTOP ══ -->
   <nav class="sidebar">
     <div class="logo">STUDY OS</div>
-    <button class="nav-btn active" data-page="home" onclick="goto('home',this)">🏠<span class="tip">Accueil</span></button>
-    <button class="nav-btn" data-page="fiche" onclick="goto('fiche',this)">📄<span class="tip">Fiches</span></button>
-    <button class="nav-btn" data-page="quiz" onclick="goto('quiz',this)">🧠<span class="tip">Quiz</span></button>
-    <button class="nav-btn" data-page="exercices" onclick="goto('exercices',this)">✍️<span class="tip">Exercices</span></button>
-    <button class="nav-btn" data-page="assistant" onclick="goto('assistant',this)">💬<span class="tip">Assistant</span></button>
-    <button class="nav-btn" data-page="planning" onclick="goto('planning',this)">📅<span class="tip">Planning</span></button>
+    <button class="nav-btn active" data-page="home" onclick="goto('home',this)">
+      <span class="icon icon-lg"><svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span class="tip">Accueil</span>
+    </button>
+    <button class="nav-btn" data-page="fiche" onclick="goto('fiche',this)">
+      <span class="icon icon-lg"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+      <span class="tip">Fiches</span>
+    </button>
+    <button class="nav-btn" data-page="quiz" onclick="goto('quiz',this)">
+      <span class="icon icon-lg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+      <span class="tip">Quiz</span>
+    </button>
+    <button class="nav-btn" data-page="exercices" onclick="goto('exercices',this)">
+      <span class="icon icon-lg"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+      <span class="tip">Exercices</span>
+    </button>
+    <button class="nav-btn" data-page="assistant" onclick="goto('assistant',this)">
+      <span class="icon icon-lg"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="tip">Assistant</span>
+    </button>
+    <button class="nav-btn" data-page="planning" onclick="goto('planning',this)">
+      <span class="icon icon-lg"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <span class="tip">Planning</span>
+    </button>
     <div class="sidebar-bottom">
-      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙<span class="tip">Mode clair</span></button>
-      <button class="nav-btn" id="installBtnDesktop" style="display:none" onclick="installApp()">📲<span class="tip">Installer</span></button>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+        <span class="icon" id="themeBtnIcon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+        <span class="tip">Mode clair</span>
+      </button>
+      <button class="nav-btn" id="installBtnDesktop" style="display:none" onclick="installApp()">
+        <span class="icon icon-lg"><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></span>
+        <span class="tip">Installer</span>
+      </button>
     </div>
   </nav>
 
@@ -358,9 +333,11 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="page-title" id="pageTitle">Bonjour 👋 <span>Prêt à bosser ?</span></div>
+      <div class="page-title" id="pageTitle">Bonjour <span>Prêt à bosser ?</span></div>
       <div class="topbar-right">
-        <button class="topbar-theme" onclick="toggleTheme()" id="themeBtnMobile">🌙</button>
+        <button class="topbar-theme" onclick="toggleTheme()" id="themeBtnMobile">
+          <span class="icon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+        </button>
         <span class="badge badge-free">Gratuit · 2/5</span>
       </div>
     </div>
@@ -368,31 +345,110 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
     <!-- ══ PAGE HOME ══ -->
     <div class="panel active" id="page-home">
       <div class="stats-row">
-        <div class="stat-box"><div class="stat-num">3</div><div class="stat-label">Fiches créées</div></div>
-        <div class="stat-box"><div class="stat-num">47</div><div class="stat-label">Questions répondues</div></div>
-        <div class="stat-box"><div class="stat-num">68%</div><div class="stat-label">Score moyen</div></div>
+        <div class="stat-box">
+          <div class="stat-num" id="statFiches">0</div>
+          <div class="stat-label">Fiches créées</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="statQuestions">0</div>
+          <div class="stat-label">Questions répondues</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="statScore">—</div>
+          <div class="stat-label">Score moyen</div>
+        </div>
       </div>
       <div class="home-grid">
-        <div class="home-card c1" onclick="goto('fiche',null)"><span class="card-icon">📄</span><div class="card-title">Fiches de révision</div><div class="card-desc">Colle ton cours, l'IA crée une fiche claire.</div></div>
-        <div class="home-card c2" onclick="goto('quiz',null)"><span class="card-icon">🧠</span><div class="card-title">Quiz intelligent</div><div class="card-desc">QCM et Vrai/Faux depuis tes cours.</div></div>
-        <div class="home-card c3" onclick="goto('exercices',null)"><span class="card-icon">✍️</span><div class="card-title">Exercices & Examens</div><div class="card-desc">Devoirs types et examens blancs avec corrections.</div></div>
-        <div class="home-card c4" onclick="goto('assistant',null)"><span class="card-icon">💬</span><div class="card-title">Assistant IA</div><div class="card-desc">Pose ta question, l'IA explique sans tricher.</div></div>
-        <div class="home-card c5 full" onclick="goto('planning',null)"><span class="card-icon">📅</span><div class="card-title">Mon planning</div><div class="card-desc">Planning de révision personnalisé avant ton exam.</div></div>
+        <div class="home-card c1" onclick="goto('fiche',null)">
+          <div class="card-icon ci1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="card-title">Fiches de révision</div>
+          <div class="card-desc">Colle ton cours, l'IA crée une fiche claire.</div>
+        </div>
+        <div class="home-card c2" onclick="goto('quiz',null)">
+          <div class="card-icon ci2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="card-title">Quiz intelligent</div>
+          <div class="card-desc">QCM et Vrai/Faux depuis tes cours.</div>
+        </div>
+        <div class="home-card c3" onclick="goto('exercices',null)">
+          <div class="card-icon ci3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          <div class="card-title">Exercices & Examens</div>
+          <div class="card-desc">Devoirs types et examens blancs avec corrections.</div>
+        </div>
+        <div class="home-card c4" onclick="goto('assistant',null)">
+          <div class="card-icon ci4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="card-title">Assistant IA</div>
+          <div class="card-desc">Pose ta question, l'IA explique sans tricher.</div>
+        </div>
+        <div class="home-card c5 full" onclick="goto('planning',null)">
+          <div class="card-icon ci5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="card-title">Mon planning</div>
+          <div class="card-desc">Planning de révision personnalisé avant ton exam.</div>
+        </div>
       </div>
     </div>
 
     <!-- ══ PAGE FICHE ══ -->
     <div class="panel" id="page-fiche">
-      <div>
-        <div class="section-label">Ton cours ou extrait</div>
-        <textarea id="ficheInput" rows="6" placeholder="Colle ici ton cours…&#10;&#10;Ex : « La photosynthèse est le processus par lequel les plantes transforment la lumière solaire en énergie… »"></textarea>
+      <!-- Import PDF -->
+      <div class="pdf-section">
+        <div class="section-label">Source du cours</div>
+        <div class="pdf-tabs">
+          <button class="pdf-tab active" onclick="setPdfTab('text','fiche',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+            Saisir le texte
+          </button>
+          <button class="pdf-tab" onclick="setPdfTab('upload','fiche',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Nouveau PDF
+          </button>
+          <button class="pdf-tab" onclick="setPdfTab('existing','fiche',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            PDF existant
+          </button>
+        </div>
+        <!-- Zone texte -->
+        <div id="fiche-text-zone">
+          <textarea id="ficheInput" rows="6" placeholder="Colle ici ton cours…&#10;&#10;Ex : La photosynthèse est le processus par lequel les plantes transforment la lumière solaire en énergie…"></textarea>
+        </div>
+        <!-- Zone upload PDF -->
+        <div id="fiche-upload-zone" style="display:none">
+          <div class="pdf-upload-zone" onclick="document.getElementById('ficheFile').click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <strong>Clique pour uploader un PDF</strong>
+            <p>ou glisse-dépose ton fichier ici</p>
+            <p style="font-size:11px">Max 20MB · PDF uniquement</p>
+          </div>
+          <input type="file" id="ficheFile" accept=".pdf" style="display:none" onchange="handlePdfUpload('fiche',this)">
+          <div class="pdf-selected-info" id="fiche-selected-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span id="fiche-selected-name">—</span>
+          </div>
+        </div>
+        <!-- Zone PDF existants -->
+        <div id="fiche-existing-zone" style="display:none">
+          <div class="pdf-list" id="fiche-pdf-list">
+            <p style="font-size:13px;color:var(--muted);text-align:center;padding:16px">Chargement des fichiers…</p>
+          </div>
+        </div>
       </div>
       <div class="row-full">
-        <button class="btn btn-primary btn-mobile-full" onclick="genFiche()">✨ Générer la fiche</button>
-        <button class="btn btn-ghost btn-mobile-full" onclick="document.getElementById('ficheInput').value='';document.getElementById('ficheResult').classList.remove('show')">Effacer</button>
+        <button class="btn btn-primary btn-mobile-full" onclick="genFiche()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Générer la fiche
+        </button>
+        <button class="btn btn-ghost btn-mobile-full" onclick="clearFiche()">Effacer</button>
       </div>
       <div class="loader" id="ficheLoader"><div class="spinner"></div>L'IA analyse ton cours…</div>
-      <div class="result-box" id="ficheResult"></div>
+      <div class="result-box" id="ficheResult">
+        <div class="result-box-header">
+          <h3>Fiche de révision</h3>
+          <button class="export-btn" onclick="exportPDF('ficheResult','Fiche_de_revision')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Télécharger PDF
+          </button>
+        </div>
+        <div id="ficheResultContent"></div>
+      </div>
     </div>
 
     <!-- ══ PAGE QUIZ ══ -->
@@ -400,13 +456,53 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
       <div>
         <div class="section-label">Type de questions</div>
         <div class="type-pills">
-          <button class="pill active" data-qtype="qcm" onclick="setQType('qcm',this)">📋 QCM</button>
-          <button class="pill" data-qtype="vf" onclick="setQType('vf',this)">⚖️ Vrai / Faux</button>
+          <button class="pill active" data-qtype="qcm" onclick="setQType('qcm',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            QCM
+          </button>
+          <button class="pill" data-qtype="vf" onclick="setQType('vf',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Vrai / Faux
+          </button>
         </div>
       </div>
-      <div>
-        <div class="section-label">Ton cours ou sujet</div>
-        <textarea id="quizInput" rows="5" placeholder="Colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les questions à partir de ce résumé."></textarea>
+      <!-- Import PDF Quiz -->
+      <div class="pdf-section">
+        <div class="section-label">Source du cours</div>
+        <div class="pdf-tabs">
+          <button class="pdf-tab active" onclick="setPdfTab('text','quiz',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+            Saisir le texte
+          </button>
+          <button class="pdf-tab" onclick="setPdfTab('upload','quiz',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Nouveau PDF
+          </button>
+          <button class="pdf-tab" onclick="setPdfTab('existing','quiz',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            PDF existant
+          </button>
+        </div>
+        <div id="quiz-text-zone">
+          <textarea id="quizInput" rows="4" placeholder="Colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les questions."></textarea>
+        </div>
+        <div id="quiz-upload-zone" style="display:none">
+          <div class="pdf-upload-zone" onclick="document.getElementById('quizFile').click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <strong>Clique pour uploader un PDF</strong>
+            <p>Max 20MB · PDF uniquement</p>
+          </div>
+          <input type="file" id="quizFile" accept=".pdf" style="display:none" onchange="handlePdfUpload('quiz',this)">
+          <div class="pdf-selected-info" id="quiz-selected-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span id="quiz-selected-name">—</span>
+          </div>
+        </div>
+        <div id="quiz-existing-zone" style="display:none">
+          <div class="pdf-list" id="quiz-pdf-list">
+            <p style="font-size:13px;color:var(--muted);text-align:center;padding:16px">Chargement des fichiers…</p>
+          </div>
+        </div>
       </div>
       <div>
         <div class="section-label">Nombre de questions</div>
@@ -416,18 +512,26 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
           <option value="8">8 questions</option>
         </select>
       </div>
-      <button class="btn btn-primary btn-mobile-full" onclick="genQuiz()">🎯 Lancer le quiz</button>
+      <button class="btn btn-primary btn-mobile-full" onclick="genQuiz()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Lancer le quiz
+      </button>
       <div class="loader" id="quizLoader"><div class="spinner"></div><span id="quizLoaderText">Résumé du cours en cours…</span></div>
-      <!-- Résumé affiché avant les questions -->
-      <div id="quizResume" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:14px;line-height:1.75;animation:fadeUp .3s ease;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-family:var(--font-head);font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;">📖 Résumé du cours</div>
-          <button class="btn btn-ghost btn-sm" onclick="startQuizFromResume()">Lancer le quiz →</button>
+      <div class="resume-box" id="quizResume">
+        <div class="resume-header">
+          <div class="resume-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Résumé du cours
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="startQuizFromResume()">Lancer →</button>
         </div>
-        <div id="quizResumeContent" style="color:var(--text2);"></div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-mobile-full" onclick="startQuizFromResume()">🎯 Je suis prêt — Lancer le quiz</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('quizResume').style.display='none'">Recommencer</button>
+        <div class="resume-content" id="quizResumeContent"></div>
+        <div class="resume-footer">
+          <button class="btn btn-primary btn-mobile-full" onclick="startQuizFromResume()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Je suis prêt — Lancer le quiz
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('quizResume').classList.remove('show')">Recommencer</button>
         </div>
       </div>
       <div id="quizArea"></div>
@@ -438,9 +542,18 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
       <div>
         <div class="section-label">Type d'exercice</div>
         <div class="type-pills">
-          <button class="pill active" data-etype="exercice" onclick="setEType('exercice',this)">✏️ Exercice guidé</button>
-          <button class="pill" data-etype="devoir" onclick="setEType('devoir',this)">📝 Devoir type</button>
-          <button class="pill" data-etype="examen" onclick="setEType('examen',this)">🎓 Examen blanc</button>
+          <button class="pill active" data-etype="exercice" onclick="setEType('exercice',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Exercice guidé
+          </button>
+          <button class="pill" data-etype="devoir" onclick="setEType('devoir',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Devoir type
+          </button>
+          <button class="pill" data-etype="examen" onclick="setEType('examen',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Examen blanc
+          </button>
         </div>
       </div>
       <div>
@@ -450,9 +563,9 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
       <div>
         <div class="section-label">Niveau</div>
         <select class="select-input" id="exoNiveau">
-          <option value="college">Collège / BEPC</option>
-          <option value="lycee" selected>Lycée / Baccalauréat</option>
-          <option value="superieur">Supérieur / BTS / Licence</option>
+          <option value="college">Collège(6ème...BEPC)</option>
+          <option value="lycee" selected>Lycée (2nde...Baccalauréat)</option>
+          <option value="superieur">Supérieur (BTS / Licence)</option>
           <option value="concours">Concours (ENS, médecine…)</option>
         </select>
       </div>
@@ -464,25 +577,67 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
           <option value="5">5 exercices</option>
         </select>
       </div>
-      <div>
-        <div class="section-label">Ton cours (obligatoire)</div>
-        <textarea id="exoCours" rows="5" placeholder="Colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé du cours, puis générera les exercices à partir de ce résumé."></textarea>
+      <!-- Import PDF Exercices -->
+      <div class="pdf-section">
+        <div class="section-label">Source du cours (obligatoire)</div>
+        <div class="pdf-tabs">
+          <button class="pdf-tab active" onclick="setPdfTab('text','exo',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+            Saisir le texte
+          </button>
+          <button class="pdf-tab" onclick="setPdfTab('upload','exo',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Nouveau PDF
+          </button>
+          <button class="pdf-tab" onclick="setPdfTab('existing','exo',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            PDF existant
+          </button>
+        </div>
+        <div id="exo-text-zone">
+          <textarea id="exoCours" rows="4" placeholder="Colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les exercices."></textarea>
+        </div>
+        <div id="exo-upload-zone" style="display:none">
+          <div class="pdf-upload-zone" onclick="document.getElementById('exoFile').click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <strong>Clique pour uploader un PDF</strong>
+            <p>Max 20MB · PDF uniquement</p>
+          </div>
+          <input type="file" id="exoFile" accept=".pdf" style="display:none" onchange="handlePdfUpload('exo',this)">
+          <div class="pdf-selected-info" id="exo-selected-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span id="exo-selected-name">—</span>
+          </div>
+        </div>
+        <div id="exo-existing-zone" style="display:none">
+          <div class="pdf-list" id="exo-pdf-list">
+            <p style="font-size:13px;color:var(--muted);text-align:center;padding:16px">Chargement des fichiers…</p>
+          </div>
+        </div>
       </div>
       <div class="row-full">
-        <button class="btn btn-primary btn-mobile-full" onclick="genExercices()">✍️ Générer les exercices</button>
+        <button class="btn btn-primary btn-mobile-full" onclick="genExercices()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Générer les exercices
+        </button>
         <button class="btn btn-ghost btn-mobile-full" onclick="resetExo()">Effacer</button>
       </div>
       <div class="loader" id="exoLoader"><div class="spinner"></div><span id="exoLoaderText">Résumé du cours en cours…</span></div>
-      <!-- Résumé affiché avant les exercices -->
-      <div id="exoResume" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:14px;line-height:1.75;animation:fadeUp .3s ease;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-family:var(--font-head);font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;">📖 Résumé du cours</div>
+      <div class="resume-box" id="exoResume">
+        <div class="resume-header">
+          <div class="resume-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Résumé du cours
+          </div>
           <button class="btn btn-ghost btn-sm" onclick="startExoFromResume()">Générer →</button>
         </div>
-        <div id="exoResumeContent" style="color:var(--text2);"></div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-mobile-full" onclick="startExoFromResume()">✍️ Générer les exercices</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('exoResume').style.display='none'">Recommencer</button>
+        <div class="resume-content" id="exoResumeContent"></div>
+        <div class="resume-footer">
+          <button class="btn btn-primary btn-mobile-full" onclick="startExoFromResume()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Générer les exercices
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('exoResume').classList.remove('show')">Recommencer</button>
         </div>
       </div>
       <div id="exoResult" style="display:none"></div>
@@ -497,13 +652,17 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
       <div class="chat-area">
         <div class="messages" id="chatMessages">
           <div class="msg ai">
-            <div class="msg-avatar">🤖</div>
-            <div class="msg-bubble">Salut ! Je suis ton assistant StudyOS. Pose-moi n'importe quelle question sur tes cours, je t'explique clairement 😄</div>
+            <div class="msg-avatar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+            </div>
+            <div class="msg-bubble">Salut ! Je suis ton assistant StudyOS. Pose-moi n'importe quelle question sur tes cours, je t'explique clairement sans faire tes devoirs à ta place.</div>
           </div>
         </div>
         <div class="chat-input-row">
           <input class="chat-input" id="chatInput" type="text" placeholder="Pose ta question…" onkeydown="if(event.key==='Enter')sendChat()">
-          <button class="btn btn-primary" style="padding:12px 16px" onclick="sendChat()">→</button>
+          <button class="btn btn-primary" style="padding:12px 14px" onclick="sendChat()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -531,7 +690,10 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
         <div class="section-label">Matières à réviser</div>
         <input class="input-field" id="subjects" type="text" placeholder="Ex: Maths, Physique, Histoire-Géo…">
       </div>
-      <button class="btn btn-primary btn-mobile-full" onclick="genPlanning()">📅 Générer mon planning</button>
+      <button class="btn btn-primary btn-mobile-full" onclick="genPlanning()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Générer mon planning
+      </button>
       <div class="loader" id="planLoader"><div class="spinner"></div>Création de ton planning…</div>
       <div id="planResult" style="display:none"></div>
     </div>
@@ -541,37 +703,36 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
   <!-- ══ BOTTOM NAV MOBILE ══ -->
   <nav class="bottom-nav">
     <button class="bnav-btn active" data-page="home" onclick="goto('home',this)">
-      <span class="bnav-icon">🏠</span>
+      <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
       <span class="bnav-label">Accueil</span>
     </button>
     <button class="bnav-btn" data-page="fiche" onclick="goto('fiche',this)">
-      <span class="bnav-icon">📄</span>
+      <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
       <span class="bnav-label">Fiches</span>
     </button>
     <button class="bnav-btn" data-page="quiz" onclick="goto('quiz',this)">
-      <span class="bnav-icon">🧠</span>
+      <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
       <span class="bnav-label">Quiz</span>
     </button>
     <button class="bnav-btn" data-page="exercices" onclick="goto('exercices',this)">
-      <span class="bnav-icon">✍️</span>
+      <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
       <span class="bnav-label">Exercices</span>
     </button>
     <button class="bnav-btn" data-page="assistant" onclick="goto('assistant',this)">
-      <span class="bnav-icon">💬</span>
+      <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
       <span class="bnav-label">Assistant</span>
     </button>
     <button class="bnav-btn" data-page="planning" onclick="goto('planning',this)">
-      <span class="bnav-icon">📅</span>
+      <span class="bnav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
       <span class="bnav-label">Planning</span>
     </button>
   </nav>
-
 </div>
 
 <!-- INSTALL BANNER -->
 <div id="installBanner">
   <div class="install-text">
-    <strong>📲 Installer StudyOS</strong><br>
+    <strong>Installer StudyOS</strong><br>
     <span>Ajoute l'app sur ton écran d'accueil !</span>
   </div>
   <div class="install-actions">
@@ -580,33 +741,59 @@ textarea::placeholder,.input-field::placeholder{color:var(--muted);}
   </div>
 </div>
 
+<!-- POPUP NOTATION -->
+<div id="ratingPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:360px;width:100%;text-align:center;animation:fadeUp .3s ease;">
+    <div style="display:flex;justify-content:center;margin-bottom:12px">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Tu aimes StudyOS ?</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px">Donne-nous ton avis, ça nous aide à améliorer l'app !</div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:16px">
+      <button class="star-btn" onclick="setRating(1)" style="font-size:28px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .15s">★</button>
+      <button class="star-btn" onclick="setRating(2)" style="font-size:28px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .15s">★</button>
+      <button class="star-btn" onclick="setRating(3)" style="font-size:28px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .15s">★</button>
+      <button class="star-btn" onclick="setRating(4)" style="font-size:28px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .15s">★</button>
+      <button class="star-btn" onclick="setRating(5)" style="font-size:28px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .15s">★</button>
+    </div>
+    <textarea id="ratingComment" placeholder="Ton avis est important — dis-nous ce que tu penses ! *" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:12px;outline:none;resize:none;margin-bottom:14px" rows="3"></textarea>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeRating()">Plus tard</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitRating()">Envoyer</button>
+    </div>
+  </div>
+</div>
+
 <script>
+const BACKEND_URL = "https://bosser.onrender.com";
+
 /* ═══════════════════════════════════════
    PWA
 ═══════════════════════════════════════ */
-const manifestData={name:"StudyOS — Révise plus fort",short_name:"StudyOS",description:"Fiches, Quiz, Exercices et Planning pour étudiants",start_url:"./",display:"standalone",background_color:"#0d0f14",theme_color:"#0d0f14",orientation:"portrait-primary",icons:[{src:"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='36' fill='%230d0f14'/><text x='50%' y='57%' dominant-baseline='middle' text-anchor='middle' font-size='110'>📚</text></svg>`),sizes:"192x192",type:"image/svg+xml"},{src:"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%230d0f14'/><text x='50%' y='57%' dominant-baseline='middle' text-anchor='middle' font-size='300'>📚</text></svg>`),sizes:"512x512",type:"image/svg+xml"}]};
+const manifestData={name:"StudyOS — Révise plus fort",short_name:"StudyOS",description:"Fiches, Quiz, Exercices et Planning pour étudiants",start_url:"./",display:"standalone",background_color:"#01123d",theme_color:"#01123d",orientation:"portrait-primary",icons:[{src:"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='36' fill='%2301123d'/><text x='50%' y='57%' dominant-baseline='middle' text-anchor='middle' font-size='110'>📚</text></svg>`),sizes:"192x192",type:"image/svg+xml"}]};
 const mBlob=new Blob([JSON.stringify(manifestData)],{type:'application/json'});
 document.getElementById('pwaManifest').href=URL.createObjectURL(mBlob);
-const swCode=`const CACHE='studyos-v3';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{self.clients.claim();});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`;
-const swBlob=new Blob([swCode],{type:'application/javascript'});
-if('serviceWorker' in navigator){navigator.serviceWorker.register(URL.createObjectURL(swBlob),{scope:'./'}).catch(()=>{});}
+const swCode=`const CACHE='studyos-v4';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{self.clients.claim();});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`;
+if('serviceWorker' in navigator){navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode],{type:'application/javascript'})),{scope:'./'}).catch(()=>{});}
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtnDesktop').style.display='flex';document.getElementById('installBanner').classList.add('show');});
 window.addEventListener('appinstalled',()=>{document.getElementById('installBanner').classList.remove('show');document.getElementById('installBtnDesktop').style.display='none';});
-async function installApp(){if(!deferredPrompt){alert('Pour installer StudyOS :\n\n📱 iPhone → Partager ↗ → "Sur l\'écran d\'accueil"\n🤖 Android → Menu ⋮ → "Ajouter à l\'écran d\'accueil"');return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBanner').classList.remove('show');}
+async function installApp(){if(!deferredPrompt){alert('Pour installer StudyOS :\n\niPhone → Partager → "Sur l\'écran d\'accueil"\nAndroid → Menu → "Ajouter à l\'écran d\'accueil"');return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBanner').classList.remove('show');}
 
 /* ═══════════════════════════════════════
    THEME
 ═══════════════════════════════════════ */
 let isDark=true;
+const moonSVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+const sunSVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+
 function toggleTheme(){
   isDark=!isDark;
-  const html=document.documentElement;
-  const icon=isDark?'🌙':'☀️';
-  html.setAttribute('data-theme',isDark?'dark':'light');
-  document.getElementById('themeBtn').innerHTML=icon+'<span class="tip">'+(isDark?'Mode clair':'Mode sombre')+'</span>';
-  document.getElementById('themeBtnMobile').textContent=icon;
-  document.getElementById('themeColor').content=isDark?'#0d0f14':'#f0f2f8';
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  document.getElementById('themeBtnIcon').innerHTML=isDark?moonSVG:sunSVG;
+  document.getElementById('themeBtnMobile').innerHTML=isDark?moonSVG:sunSVG;
+  document.getElementById('themeBtn').querySelector('.tip').textContent=isDark?'Mode clair':'Mode sombre';
+  document.getElementById('themeColor').content=isDark?'#01123d':'#dffafa';
   localStorage.setItem('studyos-theme',isDark?'dark':'light');
 }
 (function(){if(localStorage.getItem('studyos-theme')==='light')toggleTheme();})();
@@ -614,68 +801,48 @@ function toggleTheme(){
 /* ═══════════════════════════════════════
    NAVIGATION
 ═══════════════════════════════════════ */
-const titles={home:'Bonjour 👋 <span>Prêt à bosser ?</span>',fiche:'Mes <span>Fiches</span>',quiz:'Mode <span>Quiz</span>',exercices:'Exercices & <span>Examens</span>',assistant:'Assistant <span>IA</span>',planning:'Mon <span>Planning</span>'};
-
-function goto(page, btn){
+const titles={home:'Bonjour <span>Prêt à bosser ?</span>',fiche:'Mes <span>Fiches</span>',quiz:'Mode <span>Quiz</span>',exercices:'Exercices & <span>Examens</span>',assistant:'Assistant <span>IA</span>',planning:'Mon <span>Planning</span>'};
+function goto(page,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn, .bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn,.bnav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  // Activer le bon bouton dans sidebar ET bottom nav
   document.querySelectorAll('[data-page="'+page+'"]').forEach(b=>b.classList.add('active'));
   document.getElementById('pageTitle').innerHTML=titles[page]||page;
   window.scrollTo(0,0);
 }
 
 /* ═══════════════════════════════════════
-   API
+   STATS DYNAMIQUES
 ═══════════════════════════════════════ */
-const BACKEND_URL="https://bosser.onrender.com";
-// ── SYSTÈME DE NOTATION ──
-let sessionStart = Date.now();
-let ratingShown = false;
+const userId = localStorage.getItem('studyos-uid') || ('u_'+Math.random().toString(36).slice(2,10));
+localStorage.setItem('studyos-uid', userId);
 
-// Vérifie toutes les minutes si 1h s'est écoulée
-setInterval(() => {
-  const elapsed = (Date.now() - sessionStart) / 1000 / 60; // en minutes
-  if (elapsed >= 1 && !ratingShown) {
-    ratingShown = true;
-    showRatingPopup();
-  }
-}, 60000);
-
-function showRatingPopup() {
-  document.getElementById('ratingPopup').style.display = 'flex';
+async function loadStats(){
+  try{
+    const res = await fetch(`${BACKEND_URL}/api/stats/${userId}`);
+    const data = await res.json();
+    document.getElementById('statFiches').textContent = data.fiches || 0;
+    document.getElementById('statQuestions').textContent = data.questions || 0;
+    document.getElementById('statScore').textContent = data.score_moyen > 0 ? data.score_moyen+'%' : '—';
+  }catch(e){ console.log('Stats non disponibles'); }
 }
 
-function setRating(note) {
-  document.querySelectorAll('.star-btn').forEach((s, i) => {
-    s.style.color = i < note ? '#fbbf24' : 'var(--muted)';
-  });
-  document.getElementById('ratingPopup').dataset.note = note;
-}
-
-async function submitRating() {
-  const note = document.getElementById('ratingPopup').dataset.note;
-  const commentaire = document.getElementById('ratingComment').value.trim();
-  const duree = Math.round((Date.now() - sessionStart) / 1000 / 60) + ' min';
-
-  if (!note) return alert('Donne une note d\'abord !');
-
-  try {
-    await fetch(`${BACKEND_URL}/api/rating`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ note: parseInt(note), commentaire, duree })
+async function updateStat(action, value=null){
+  try{
+    await fetch(`${BACKEND_URL}/api/stats/update`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId, action, value})
     });
-  } catch(e) {}
-
-  document.getElementById('ratingPopup').style.display = 'none';
-  alert('Merci pour ton avis ! 🙏');
+    loadStats();
+  }catch(e){}
 }
 
-function closeRating() {
-  document.getElementById('ratingPopup').style.display = 'none';
-}
+loadStats();
+
+/* ═══════════════════════════════════════
+   API CLAUDE
+═══════════════════════════════════════ */
 async function callClaude(prompt,system=''){
   const res=await fetch(`${BACKEND_URL}/api/chat`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}],system})});
   const data=await res.json();
@@ -683,18 +850,121 @@ async function callClaude(prompt,system=''){
 }
 
 /* ═══════════════════════════════════════
+   PDF IMPORT — Gestion des onglets
+═══════════════════════════════════════ */
+const pdfTabState = { fiche:'text', quiz:'text', exo:'text' };
+const pdfSelectedFiles = { fiche:null, quiz:null, exo:null };
+const pdfSelectedTexts = { fiche:'', quiz:'', exo:'' };
+
+function setPdfTab(tab, section, btn){
+  pdfTabState[section] = tab;
+  const prefix = section;
+  btn.closest('.pdf-tabs').querySelectorAll('.pdf-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`${prefix}-text-zone`).style.display = tab==='text'?'block':'none';
+  document.getElementById(`${prefix}-upload-zone`).style.display = tab==='upload'?'block':'none';
+  document.getElementById(`${prefix}-existing-zone`).style.display = tab==='existing'?'block':'none';
+  if(tab==='existing') loadPdfList(section);
+}
+
+async function handlePdfUpload(section, input){
+  const file = input.files[0];
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('pdf', file);
+  try{
+    const res = await fetch(`${BACKEND_URL}/api/files/upload`, {method:'POST', body:formData});
+    const data = await res.json();
+    if(data.success){
+      pdfSelectedFiles[section] = data.file;
+      pdfSelectedTexts[section] = `[PDF: ${file.name}] — Cours uploadé, utilise le contenu de ce PDF pour générer.`;
+      const infoEl = document.getElementById(`${section}-selected-info`);
+      document.getElementById(`${section}-selected-name`).textContent = file.name;
+      infoEl.classList.add('show');
+    }
+  }catch(e){ alert('Erreur upload. Réessaie.'); }
+}
+
+async function loadPdfList(section){
+  const listEl = document.getElementById(`${section}-pdf-list`);
+  listEl.innerHTML = '<p style="font-size:13px;color:var(--muted);text-align:center;padding:16px">Chargement…</p>';
+  try{
+    const res = await fetch(`${BACKEND_URL}/api/files/list`);
+    const data = await res.json();
+    if(!data.files || data.files.length===0){
+      listEl.innerHTML='<p style="font-size:13px;color:var(--muted);text-align:center;padding:16px">Aucun PDF disponible. Uploadez-en un d\'abord.</p>';
+      return;
+    }
+    listEl.innerHTML = data.files.map(f=>`
+      <div class="pdf-item" onclick="selectExistingPdf('${section}','${f.id}','${f.name}',this)">
+        <span class="pdf-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        <span class="pdf-item-name">${f.name}</span>
+        <span class="pdf-item-size">${f.size ? Math.round(f.size/1024)+'KB' : ''}</span>
+      </div>
+    `).join('');
+  }catch(e){
+    listEl.innerHTML='<p style="font-size:13px;color:var(--danger);text-align:center;padding:16px">Erreur chargement.</p>';
+  }
+}
+
+function selectExistingPdf(section, fileId, fileName, el){
+  document.querySelectorAll(`#${section}-pdf-list .pdf-item`).forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  pdfSelectedFiles[section] = {id:fileId, name:fileName};
+  pdfSelectedTexts[section] = `[PDF: ${fileName}] — Cours sélectionné depuis les fichiers existants.`;
+}
+
+function getCourseContent(section){
+  const tab = pdfTabState[section];
+  if(tab==='text'){
+    const inputId = section==='fiche'?'ficheInput':section==='quiz'?'quizInput':'exoCours';
+    return document.getElementById(inputId).value.trim();
+  }
+  return pdfSelectedTexts[section] || '';
+}
+
+/* ═══════════════════════════════════════
+   EXPORT PDF
+═══════════════════════════════════════ */
+function exportPDF(containerId, filename){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const el = document.getElementById(containerId);
+  const content = el.innerText || el.textContent;
+  const lines = doc.splitTextToSize(content, 180);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  let y = 20;
+  lines.forEach(line => {
+    if(y > 280){ doc.addPage(); y = 20; }
+    doc.text(line, 15, y);
+    y += 7;
+  });
+  doc.save(`${filename}_StudyOS.pdf`);
+}
+
+/* ═══════════════════════════════════════
    FICHE
 ═══════════════════════════════════════ */
+function clearFiche(){
+  document.getElementById('ficheInput').value='';
+  const r=document.getElementById('ficheResult');
+  r.classList.remove('show');
+  document.getElementById('ficheResultContent').innerHTML='';
+}
+
 async function genFiche(){
-  const cours=document.getElementById('ficheInput').value.trim();
-  if(!cours)return alert('Colle ton cours d\'abord !');
+  const cours = getCourseContent('fiche');
+  if(!cours) return alert('Ajoute ton cours d\'abord !');
   const loader=document.getElementById('ficheLoader');
   const result=document.getElementById('ficheResult');
   loader.classList.add('show');result.classList.remove('show');
   const prompt=`Tu es un assistant pédagogique expert. Génère une fiche de révision synthétique en français.\nInclus : titre, définitions clés en gras, points essentiels en liste, résumé en 2-3 phrases.\nCours : """${cours}"""\nRéponds directement en HTML simple (h3, ul, li, strong, p).`;
   const html=await callClaude(prompt);
   loader.classList.remove('show');
-  result.innerHTML=html;result.classList.add('show');
+  document.getElementById('ficheResultContent').innerHTML=html;
+  result.classList.add('show');
+  updateStat('fiche');
 }
 
 /* ═══════════════════════════════════════
@@ -706,28 +976,23 @@ let quizResumeSaved='', quizNbSaved=5;
 function setQType(type,el){selectedQType=type;document.querySelectorAll('[data-qtype]').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
 
 async function genQuiz(){
-  const cours=document.getElementById('quizInput').value.trim();
-  if(!cours)return alert('Colle ton cours d\'abord !');
+  const cours = getCourseContent('quiz');
+  if(!cours) return alert('Ajoute ton cours d\'abord !');
   quizNbSaved=document.getElementById('quizNb').value;
   const loader=document.getElementById('quizLoader');
   const loaderText=document.getElementById('quizLoaderText');
   const area=document.getElementById('quizArea');
   const resumeBox=document.getElementById('quizResume');
-  const resumeContent=document.getElementById('quizResumeContent');
-
-  // Étape 1 — Résumé du cours
   loader.classList.add('show');
   loaderText.textContent='Résumé du cours en cours…';
   area.innerHTML='';
-  resumeBox.style.display='none';
-
-  const resumePrompt=`Tu es un assistant pédagogique. Fais un résumé clair et structuré en français du cours suivant. Le résumé doit couvrir tous les points importants de manière concise, pour qu'un élève puisse le relire rapidement avant de faire un quiz.\nCours : """${cours}"""\nRéponds directement avec le résumé en HTML simple (p, strong, ul, li). Pas de titre h1, commence directement le contenu.`;
+  resumeBox.classList.remove('show');
+  const resumePrompt=`Tu es un assistant pédagogique. Fais un résumé clair et structuré en français du cours suivant.\nCours : """${cours}"""\nRéponds en HTML simple (p, strong, ul, li). Pas de titre h1.`;
   const resume=await callClaude(resumePrompt);
-  quizResumeSaved=cours; // on garde le cours original pour générer les questions
-
+  quizResumeSaved=cours;
   loader.classList.remove('show');
-  resumeContent.innerHTML=resume;
-  resumeBox.style.display='block';
+  document.getElementById('quizResumeContent').innerHTML=resume;
+  resumeBox.classList.add('show');
 }
 
 async function startQuizFromResume(){
@@ -735,54 +1000,103 @@ async function startQuizFromResume(){
   const loaderText=document.getElementById('quizLoaderText');
   const area=document.getElementById('quizArea');
   const resumeBox=document.getElementById('quizResume');
-
-  // Étape 2 — Génération des questions
   loader.classList.add('show');
   loaderText.textContent='Génération des questions…';
-  resumeBox.style.display='none';
+  resumeBox.classList.remove('show');
   area.innerHTML='';
-
   const typeLabel=selectedQType==='qcm'?'QCM à 4 choix (une seule bonne réponse)':'Questions Vrai/Faux';
-  const prompt=`Génère exactement ${quizNbSaved} questions de type ${typeLabel} en français.\nBases-toi sur ce cours : """${quizResumeSaved}"""\nRéponds UNIQUEMENT avec un JSON valide sans markdown.\nFormat : [{"q":"question","options":["A","B","C","D"],"answer":0,"explication":"..."}]\nPour Vrai/Faux : options=["Vrai","Faux"] et answer=0 ou 1.`;
+  const prompt=`Génère exactement ${quizNbSaved} questions de type ${typeLabel} en français.\nCours : """${quizResumeSaved}"""\nRéponds UNIQUEMENT en JSON valide sans markdown.\nFormat : [{"q":"question","options":["A","B","C","D"],"answer":0,"explication":"..."}]`;
   const raw=await callClaude(prompt);
   loader.classList.remove('show');
-  try{quizData=JSON.parse(raw.replace(/```json|```/g,'').trim());currentQ=0;score=0;renderQuestion();}
-  catch{area.innerHTML=`<p style="color:var(--danger);padding:12px">Erreur. Réessaie.</p>`;}
+  try{
+    quizData=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    currentQ=0;score=0;renderQuestion();
+  }catch{area.innerHTML=`<p style="color:var(--danger);padding:12px">Erreur. Réessaie.</p>`;}
 }
+
 function renderQuestion(){
   const area=document.getElementById('quizArea');
   if(currentQ>=quizData.length){
     const pct=Math.round((score/quizData.length)*100);
-    area.innerHTML=`<div class="score-display show"><div class="score-big">${pct}%</div><div class="score-label">${score} / ${quizData.length} bonnes réponses</div><p style="font-size:13px;color:var(--muted);margin-top:8px">${pct>=70?'🎉 Excellent !':pct>=50?'💪 Bien, continue !':'📚 Revois ce cours.'}</p><button class="btn btn-ghost" style="margin-top:16px" onclick="document.getElementById('quizArea').innerHTML='';quizData=[]">Nouveau quiz</button></div>`;
+    updateStat('score', pct);
+    area.innerHTML=`<div class="score-display show">
+      <div class="score-big">${pct}%</div>
+      <div class="score-label">${score} / ${quizData.length} bonnes réponses</div>
+      <p style="font-size:13px;color:var(--muted);margin-top:8px">${pct>=70?'Excellent ! Continue comme ça.':pct>=50?'Bien, tu peux encore progresser.':'Revois ce cours et réessaie.'}</p>
+      <button class="export-btn" style="margin-top:12px" onclick="exportQuizResults(${pct},${score},${quizData.length})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Télécharger les résultats
+      </button>
+      <button class="btn btn-ghost" style="margin-top:8px" onclick="document.getElementById('quizArea').innerHTML='';quizData=[]">Nouveau quiz</button>
+    </div>`;
     return;
   }
   const q=quizData[currentQ];
   const pct=Math.round((currentQ/quizData.length)*100);
-  area.innerHTML=`<div class="quiz-card show"><div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Q ${currentQ+1} / ${quizData.length}</span><span style="font-size:12px;color:var(--accent)">Score : ${score}</span></div><div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div></div><div class="question-text">${q.q}</div><div class="options-list">${q.options.map((o,i)=>`<button class="option-btn" onclick="checkAnswer(${i})">${o}</button>`).join('')}</div><div class="feedback-msg" id="feedbackMsg"></div><button class="btn btn-ghost btn-sm" id="nextBtn" style="display:none;align-self:flex-end" onclick="nextQ()">Suivant →</button></div>`;
+  area.innerHTML=`<div class="quiz-card show">
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;color:var(--muted)">Q ${currentQ+1} / ${quizData.length}</span>
+        <span style="font-size:12px;color:var(--accent)">Score : ${score}</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="question-text">${q.q}</div>
+    <div class="options-list">${q.options.map((o,i)=>`<button class="option-btn" onclick="checkAnswer(${i})">${o}</button>`).join('')}</div>
+    <div class="feedback-msg" id="feedbackMsg"></div>
+    <button class="btn btn-ghost btn-sm" id="nextBtn" style="display:none;align-self:flex-end" onclick="nextQ()">Suivant →</button>
+  </div>`;
 }
+
 function checkAnswer(idx){
   const q=quizData[currentQ];
   document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
   document.querySelectorAll('.option-btn')[q.answer].classList.add('correct');
   const fb=document.getElementById('feedbackMsg');
-  if(idx===q.answer){score++;fb.textContent='✅ '+(q.explication||'Bonne réponse !');fb.className='feedback-msg show ok';}
-  else{document.querySelectorAll('.option-btn')[idx].classList.add('wrong');fb.textContent='❌ '+(q.explication||'Mauvaise réponse.');fb.className='feedback-msg show ko';}
+  if(idx===q.answer){score++;fb.textContent='✓ '+(q.explication||'Bonne réponse !');fb.className='feedback-msg show ok';}
+  else{document.querySelectorAll('.option-btn')[idx].classList.add('wrong');fb.textContent='✗ '+(q.explication||'Mauvaise réponse.');fb.className='feedback-msg show ko';}
   document.getElementById('nextBtn').style.display='flex';
+  updateStat('question');
 }
+
 function nextQ(){currentQ++;renderQuestion();}
+
+function exportQuizResults(pct, score, total){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text('Résultats du Quiz — StudyOS', 15, 20);
+  doc.setFontSize(12);
+  doc.text(`Score : ${score} / ${total} (${pct}%)`, 15, 35);
+  doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, 15, 45);
+  let y = 60;
+  quizData.forEach((q, i) => {
+    doc.setFontSize(11);
+    const qLines = doc.splitTextToSize(`Q${i+1}. ${q.q}`, 180);
+    qLines.forEach(l => { if(y>270){doc.addPage();y=20;} doc.text(l,15,y);y+=6; });
+    const corrLines = doc.splitTextToSize(`Réponse : ${q.options[q.answer]}`, 180);
+    doc.setTextColor(5, 150, 105);
+    corrLines.forEach(l => { if(y>270){doc.addPage();y=20;} doc.text(l,15,y);y+=6; });
+    doc.setTextColor(0,0,0);
+    y += 4;
+  });
+  doc.save('Quiz_Resultats_StudyOS.pdf');
+}
 
 /* ═══════════════════════════════════════
    EXERCICES
 ═══════════════════════════════════════ */
 let selectedEType='exercice';
 let exoCoursCache='', exoMatiereCache='', exoNiveauCache='', exoNbCache=3;
+let exoResultData = [];
 
 function setEType(type,el){selectedEType=type;document.querySelectorAll('[data-etype]').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+
 function resetExo(){
   document.getElementById('exoMatiere').value='';
   document.getElementById('exoCours').value='';
   const r=document.getElementById('exoResult');r.style.display='none';r.innerHTML='';
-  document.getElementById('exoResume').style.display='none';
+  document.getElementById('exoResume').classList.remove('show');
 }
 
 const exoConfig={
@@ -793,33 +1107,26 @@ const exoConfig={
 
 async function genExercices(){
   const matiere=document.getElementById('exoMatiere').value.trim();
-  const cours=document.getElementById('exoCours').value.trim();
+  const cours=getCourseContent('exo');
   if(!matiere)return alert('Indique la matière et le sujet !');
-  if(!cours)return alert('Colle ton cours — il est nécessaire pour générer le résumé et les exercices !');
-
+  if(!cours)return alert('Ajoute ton cours — il est nécessaire !');
   exoMatiereCache=matiere;
   exoNiveauCache={college:'Collège / BEPC',lycee:'Lycée / Baccalauréat',superieur:'Supérieur / BTS / Licence',concours:'Concours'}[document.getElementById('exoNiveau').value];
   exoNbCache=document.getElementById('exoNb').value;
   exoCoursCache=cours;
-
   const loader=document.getElementById('exoLoader');
   const loaderText=document.getElementById('exoLoaderText');
   const result=document.getElementById('exoResult');
   const resumeBox=document.getElementById('exoResume');
-  const resumeContent=document.getElementById('exoResumeContent');
-
-  // Étape 1 — Résumé du cours
   loader.classList.add('show');
   loaderText.textContent='Résumé du cours en cours…';
   result.style.display='none';result.innerHTML='';
-  resumeBox.style.display='none';
-
-  const resumePrompt=`Tu es un professeur expert en ${matiere}. Fais un résumé pédagogique clair en français du cours suivant, en mettant en avant les notions clés, formules importantes et points essentiels que l'élève doit maîtriser.\nCours : """${cours}"""\nRéponds directement en HTML simple (p, strong, ul, li). Pas de titre h1.`;
+  resumeBox.classList.remove('show');
+  const resumePrompt=`Tu es professeur expert en ${matiere}. Fais un résumé pédagogique clair en français, en mettant en avant les notions clés et formules importantes.\nCours : """${cours}"""\nRéponds en HTML simple (p, strong, ul, li). Pas de titre h1.`;
   const resume=await callClaude(resumePrompt);
-
   loader.classList.remove('show');
-  resumeContent.innerHTML=resume;
-  resumeBox.style.display='block';
+  document.getElementById('exoResumeContent').innerHTML=resume;
+  resumeBox.classList.add('show');
 }
 
 async function startExoFromResume(){
@@ -828,23 +1135,73 @@ async function startExoFromResume(){
   const result=document.getElementById('exoResult');
   const resumeBox=document.getElementById('exoResume');
   const cfg=exoConfig[selectedEType];
-
-  // Étape 2 — Génération des exercices
   loader.classList.add('show');
   loaderText.textContent='Création de tes exercices…';
-  resumeBox.style.display='none';
+  resumeBox.classList.remove('show');
   result.style.display='none';result.innerHTML='';
-
-  const prompt=`Tu es professeur expert en ${exoMatiereCache} niveau ${exoNiveauCache}. Génère exactement ${exoNbCache} ${cfg.label} en français.\nCours de référence : """${exoCoursCache}"""\n${cfg.consigne}\nRéponds UNIQUEMENT en JSON valide sans markdown :\n[{"titre":"Exercice 1 — Titre","duree":"20 min","bareme":"/ 5 pts","enonce":"Énoncé complet","correction":"Correction détaillée"}]`;
+  const prompt=`Tu es professeur expert en ${exoMatiereCache} niveau ${exoNiveauCache}. Génère exactement ${exoNbCache} ${cfg.label} en français.\nCours : """${exoCoursCache}"""\n${cfg.consigne}\nRéponds UNIQUEMENT en JSON valide sans markdown :\n[{"titre":"Exercice 1 — Titre","duree":"20 min","bareme":"/ 5 pts","enonce":"Énoncé complet","correction":"Correction détaillée"}]`;
   const raw=await callClaude(prompt);
   loader.classList.remove('show');
   try{
-    const exos=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    result.innerHTML=exos.map((exo,i)=>`<div class="exo-block"><div class="exo-header"><div class="exo-num">${exo.titre||'Exercice '+(i+1)}</div><div class="exo-meta"><span class="mode-badge ${cfg.badgeClass}">${cfg.badge}</span><span style="font-size:11px;color:var(--muted)">⏱ ${exo.duree||'—'} · ${exo.bareme||''}</span></div></div><div class="exo-question">${(exo.enonce||'').replace(/\n/g,'<br>')}</div><div class="section-label" style="margin-bottom:6px">Ta réponse</div><textarea rows="4" placeholder="Écris ta réponse avant de voir la correction…" style="margin-bottom:12px"></textarea><button class="btn btn-ghost btn-sm" onclick="toggleCorr(this)">👁 Voir la correction</button><div class="exo-correction" id="corr-${i}"><div class="correction-label">✅ Correction</div>${(exo.correction||'').replace(/\n/g,'<br>')}</div></div>`).join('');
+    exoResultData=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    result.innerHTML=`
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="export-btn" onclick="exportExercices()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Télécharger tous les exercices
+        </button>
+      </div>
+      ${exoResultData.map((exo,i)=>`
+      <div class="exo-block">
+        <div class="exo-header">
+          <div class="exo-num">${exo.titre||'Exercice '+(i+1)}</div>
+          <div class="exo-meta">
+            <span class="mode-badge ${cfg.badgeClass}">${cfg.badge}</span>
+            <span style="font-size:11px;color:var(--muted)">⏱ ${exo.duree||'—'} · ${exo.bareme||''}</span>
+          </div>
+        </div>
+        <div class="exo-question">${(exo.enonce||'').replace(/\n/g,'<br>')}</div>
+        <div class="section-label" style="margin-bottom:6px">Ta réponse</div>
+        <textarea rows="4" placeholder="Écris ta réponse avant de voir la correction…" style="margin-bottom:12px"></textarea>
+        <button class="btn btn-ghost btn-sm" onclick="toggleCorr(this)">Voir la correction</button>
+        <div class="exo-correction" id="corr-${i}">
+          <div class="correction-label">Correction</div>
+          ${(exo.correction||'').replace(/\n/g,'<br>')}
+        </div>
+      </div>`).join('')}`;
     result.style.display='block';
   }catch{result.innerHTML=`<p style="color:var(--danger);padding:12px">Erreur. Réessaie.</p>`;result.style.display='block';}
 }
-function toggleCorr(btn){const c=btn.nextElementSibling;c.classList.toggle('show');btn.textContent=c.classList.contains('show')?'🙈 Masquer':'👁 Voir la correction';}
+
+function toggleCorr(btn){const c=btn.nextElementSibling;c.classList.toggle('show');btn.textContent=c.classList.contains('show')?'Masquer la correction':'Voir la correction';}
+
+function exportExercices(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(`Exercices — ${exoMatiereCache}`, 15, 20);
+  doc.setFontSize(11);
+  doc.text(`Niveau : ${exoNiveauCache} | Type : ${exoConfig[selectedEType].badge}`, 15, 30);
+  let y = 45;
+  exoResultData.forEach((exo, i) => {
+    doc.setFontSize(13);
+    doc.setFont('helvetica','bold');
+    const tLines = doc.splitTextToSize(exo.titre||`Exercice ${i+1}`, 180);
+    tLines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,15,y);y+=7;});
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(11);
+    const eLines = doc.splitTextToSize(exo.enonce||'', 180);
+    eLines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,15,y);y+=6;});
+    y += 4;
+    doc.setTextColor(5,150,105);
+    doc.text('--- Correction ---', 15, y); y+=6;
+    const cLines = doc.splitTextToSize(exo.correction||'', 180);
+    cLines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,15,y);y+=6;});
+    doc.setTextColor(0,0,0);
+    y += 8;
+  });
+  doc.save(`Exercices_${exoMatiereCache}_StudyOS.pdf`);
+}
 
 /* ═══════════════════════════════════════
    ASSISTANT
@@ -866,11 +1223,15 @@ async function sendChat(){
   chatHistory.push({role:'assistant',content:reply});
   document.getElementById('chatMessages').scrollTop=9999;
 }
+
 function appendMsg(role,text){
   const msgs=document.getElementById('chatMessages');
   const div=document.createElement('div');
   div.className='msg '+role;
-  div.innerHTML=`<div class="msg-avatar">${role==='ai'?'🤖':'👤'}</div><div class="msg-bubble">${fmtChat(text)}</div>`;
+  const avatarSvg = role==='ai'
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  div.innerHTML=`<div class="msg-avatar">${avatarSvg}</div><div class="msg-bubble">${fmtChat(text)}</div>`;
   msgs.appendChild(div);msgs.scrollTop=9999;
   return div.querySelector('.msg-bubble');
 }
@@ -894,32 +1255,79 @@ async function genPlanning(){
   loader.classList.remove('show');
   try{
     const plan=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    result.innerHTML=`<div class="section-label" style="margin-bottom:10px">Planning — ${hours}h/jour</div><div class="week-grid">${plan.map(d=>`<div class="day-card"><div class="day-name">${d.jour}</div>${d.taches.map(t=>{const m=t.match(/\((\d+)min\)/);return`<div class="day-task">${t.replace(/\(\d+min\)/,'').trim()}</div>${m?`<div class="day-duration">⏱ ${m[1]} min</div>`:''}`}).join('')}</div>`).join('')}</div>`;
+    result.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="section-label" style="margin-bottom:0">Planning — ${hours}h/jour</div>
+        <button class="export-btn" onclick="exportPlanning(${JSON.stringify(plan).replace(/"/g,'&quot;')},'${exam}','${hours}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Télécharger PDF
+        </button>
+      </div>
+      <div class="week-grid">${plan.map(d=>`
+        <div class="day-card">
+          <div class="day-name">${d.jour}</div>
+          ${d.taches.map(t=>{const m=t.match(/\((\d+)min\)/);return`<div class="day-task">${t.replace(/\(\d+min\)/,'').trim()}</div>${m?`<div class="day-duration">⏱ ${m[1]} min</div>`:''}`}).join('')}
+        </div>`).join('')}
+      </div>`;
     result.style.display='block';
   }catch{result.innerHTML=`<p style="color:var(--danger)">Erreur. Réessaie.</p>`;result.style.display='block';}
 }
+
+function exportPlanning(plan, exam, hours){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(`Planning de révision — ${exam}`, 15, 20);
+  doc.setFontSize(11);
+  doc.text(`${hours}h par jour | ${new Date().toLocaleDateString('fr-FR')}`, 15, 30);
+  let y = 45;
+  plan.forEach(day => {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    if(y>270){doc.addPage();y=20;}
+    doc.text(day.jour, 15, y); y+=8;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(11);
+    day.taches.forEach(t=>{
+      const lines=doc.splitTextToSize(`• ${t}`,175);
+      lines.forEach(l=>{if(y>275){doc.addPage();y=20;}doc.text(l,20,y);y+=6;});
+    });
+    y+=4;
+  });
+  doc.save(`Planning_${exam}_StudyOS.pdf`);
+}
+
+/* ═══════════════════════════════════════
+   NOTATION
+═══════════════════════════════════════ */
+let sessionStart=Date.now();
+let ratingShown=false;
+
+setInterval(()=>{
+  const elapsed=(Date.now()-sessionStart)/1000/60;
+  if(elapsed>=1&&!ratingShown){ratingShown=true;showRatingPopup();}
+},60000);
+
+function showRatingPopup(){document.getElementById('ratingPopup').style.display='flex';}
+function closeRating(){document.getElementById('ratingPopup').style.display='none';}
+
+function setRating(note){
+  document.querySelectorAll('.star-btn').forEach((s,i)=>{s.style.color=i<note?'#fbbf24':'var(--muted)';});
+  document.getElementById('ratingPopup').dataset.note=note;
+}
+
+async function submitRating(){
+  const note=document.getElementById('ratingPopup').dataset.note;
+  const commentaire=document.getElementById('ratingComment').value.trim();
+  const duree=Math.round((Date.now()-sessionStart)/1000/60)+' min';
+  if(!note)return alert('Donne une note d\'abord !');
+  if(!commentaire)return alert('Ton commentaire est obligatoire — ton avis nous aide !');
+  try{
+    await fetch(`${BACKEND_URL}/api/rating`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:parseInt(note),commentaire,duree})});
+  }catch(e){}
+  document.getElementById('ratingPopup').style.display='none';
+  alert('Merci pour ton avis !');
+}
 </script>
-
-<!-- POPUP NOTATION -->
-<div id="ratingPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:360px;width:100%;text-align:center;animation:fadeUp .3s ease;">
-    <div style="font-size:36px;margin-bottom:12px">⭐</div>
-    <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Tu aimes StudyOS ?</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:20px">Donne-nous ton avis, ça nous aide à améliorer l'app !</div>
-    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:16px">
-      <button class="star-btn" onclick="setRating(1)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
-      <button class="star-btn" onclick="setRating(2)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
-      <button class="star-btn" onclick="setRating(3)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
-      <button class="star-btn" onclick="setRating(4)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
-      <button class="star-btn" onclick="setRating(5)" style="font-size:32px;background:none;border:none;cursor:pointer;color:var(--muted);transition:color .2s">★</button>
-    </div>
-    <textarea id="ratingComment" placeholder="Un commentaire ? (optionnel)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:12px;outline:none;resize:none;margin-bottom:14px" rows="3"></textarea>
-    <div style="display:flex;gap:10px;">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeRating()">Plus tard</button>
-      <button class="btn btn-primary" style="flex:1" onclick="submitRating()">Envoyer 🙏</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
