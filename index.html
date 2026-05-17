@@ -156,7 +156,7 @@
                 <line x1="16" y1="17" x2="8" y2="17" />
               </svg></div>
             <div class="card-title">Fiches de révision</div>
-            <div class="card-desc">Colle ton cours, l'IA crée une fiche claire.</div>
+            <div class="card-desc">Décrit ou colle ton cours, l'IA crée une fiche claire.</div>
           </div>
           <div class="home-card c2" onclick="goto('quiz',null)">
             <div class="card-icon ci2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -228,7 +228,7 @@
 
         <!-- Zone texte -->
         <div id="fiche-text-zone">
-          <textarea id="ficheInput" rows="6" placeholder="Colle ici ton cours…"></textarea>
+          <textarea id="ficheInput" rows="6" placeholder="Décrit ou colle ici ton cours…"></textarea>
         </div>
 
         <!-- Zone upload PDF -->
@@ -328,7 +328,7 @@
           </div><!-- fin pdf-section -->
           <div id="quiz-text-zone">
             <textarea id="quizInput" rows="4"
-              placeholder="Colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les questions."></textarea>
+              placeholder="Décrit ou colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les questions."></textarea>
           </div>
           <div id="quiz-upload-zone">
             <div class="pdf-upload-zone" onclick="document.getElementById('quizFile').click()">
@@ -441,6 +441,7 @@
         <div>
           <div class="section-label">Niveau</div>
           <select class="select-input" id="exoNiveau">
+            <option value="primaire">Primaire (CP1...CM2)</option>
             <option value="college">Collège(6ème...BEPC)</option>
             <option value="lycee" selected>Lycée (2nde...Baccalauréat)</option>
             <option value="superieur">Supérieur (BTS / Licence)</option>
@@ -480,7 +481,7 @@
         </div>
           <div id="exo-text-zone">
             <textarea id="exoCours" rows="4"
-              placeholder="Colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les exercices."></textarea>
+              placeholder="Décrit ou colle ton cours ici…&#10;&#10;L'IA fera d'abord un résumé, puis générera les exercices."></textarea>
           </div>
           <div id="exo-upload-zone">
             <div class="pdf-upload-zone" onclick="document.getElementById('exoFile').click()">

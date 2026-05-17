@@ -364,7 +364,7 @@ function goBack() {
       const loader = document.getElementById('ficheLoader');
       const result = document.getElementById('ficheResult');
       loader.classList.add('show'); result.classList.remove('show');
-      const prompt = `Tu es un assistant pédagogique expert. Génère une fiche de révision synthétique en français.\nInclus : titre, définitions clés en gras, points essentiels en liste, résumé en 4-5 phrases.\nCours : """${cours}"""\nRéponds directement en HTML simple (h3, ul, li, strong, p).`;
+      const prompt = `Tu es un assistant pédagogique expert. Génère une fiche de révision synthétique en français.\nInclus : titre, définitions clés en gras, points essentiels en liste, exemples numériques si nécessaire, résumé en 4-5 phrases.\nCours : """${cours}"""\nRéponds directement en HTML simple (h3, ul, li, strong, p).`;
       const html = await callClaude(prompt);
       loader.classList.remove('show');
       document.getElementById('ficheResultContent').innerHTML = html;
@@ -392,7 +392,7 @@ function goBack() {
       loaderText.textContent = 'Résumé du cours en cours…';
       area.innerHTML = '';
       resumeBox.classList.remove('show');
-      const resumePrompt = `Tu es un assistant pédagogique. Fais un résumé clair et structuré en français du cours suivant.\nCours : """${cours}"""\nRéponds en HTML simple (p, strong, ul, li). Pas de titre h1.`;
+      const resumePrompt = `Tu es un assistant pédagogique très compétent. Fais un résumé clair et structuré en français du cours suivant.\nCours : """${cours}"""\nRéponds en HTML simple (p, strong, ul, li). Avec des détails et exemples et aussi des titres h1, h2, h3.`;
       const resume = await callClaude(resumePrompt);
       quizResumeSaved = cours;
       loader.classList.remove('show');
@@ -520,7 +520,7 @@ function goBack() {
       if (!matiere) return alert('Indique la matière et le sujet !');
       if (!cours) return alert('Ajoute ton cours — il est nécessaire !');
       exoMatiereCache = matiere;
-      exoNiveauCache = { college: 'Collège (6ème...BEPC)', lycee: 'Lycée (2nde...Baccalauréat)', superieur: 'Supérieur (BTS / Licence)', concours: 'Concours' }[document.getElementById('exoNiveau').value];
+      exoNiveauCache = {primaire: 'Primaire (CP1...CM2)', college: 'Collège (6ème...BEPC)', lycee: 'Lycée (2nde...Baccalauréat)', superieur: 'Supérieur (BTS / Licence)', concours: 'Concours' }[document.getElementById('exoNiveau').value];
       exoNbCache = document.getElementById('exoNb').value;
       exoCoursCache = cours;
       const loader = document.getElementById('exoLoader');
@@ -531,7 +531,7 @@ function goBack() {
       loaderText.textContent = 'Résumé du cours en cours…';
       result.style.display = 'none'; result.innerHTML = '';
       resumeBox.classList.remove('show');
-      const resumePrompt = `Tu es professeur expert en ${matiere}. Fais un résumé pédagogique clair en français, en mettant en avant les notions clés et formules importantes.\nCours : """${cours}"""\nRéponds en HTML simple (p, strong, ul, li). Pas de titre h1.`;
+      const resumePrompt = `Tu es professeur expert et très compétent en ${matiere}. Fais un résumé pédagogique clair en français, en mettant en avant les notions clés et formules importantes. Les devoirs type doivent avoir un style professionnel, énnoncé, questions 1, 2, 3... Les exercices examens blancs doivent avoir un style très professionnel, énnoncé comportant des données de réponses, questions comportant des questions et sous-questions 1-1, 1-2, 1-3...\nCours : """${cours}"""\nRéponds en HTML simple (p, strong, ul, li). Avec des détails et exemples et aussi des titres h1, h2, h3.`;
       const resume = await callClaude(resumePrompt);
       loader.classList.remove('show');
       document.getElementById('exoResumeContent').innerHTML = resume;
@@ -624,7 +624,7 @@ function goBack() {
       appendMsg('user', msg);
       chatHistory.push({ role: 'user', content: msg });
       const typingEl = appendMsg('ai', '…');
-      const system = `Tu es StudyOS, assistant pédagogique pour élèves francophones. Tu expliques clairement avec des exemples simples. Tu guides sans faire le travail à leur place. Bienveillant, direct, motivant. Réponds toujours en français.`;
+      const system = `Tu es StudyOS, assistant pédagogique pour élèves francophones. Tu expliques clairement avec des exemples simples. Tu guides sans faire le travail à leur place. Bienveillant, direct, motivant. Donne des formules et rèponse numérique si possible. Réponds toujours en français.`;
       const res = await fetch(`${BACKEND_URL}/api/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: chatHistory, system }) });
       const data = await res.json();
       const reply = data.content?.[0]?.text || "Je n'ai pas compris, reformule.";
@@ -659,7 +659,7 @@ function goBack() {
       const result = document.getElementById('planResult');
       loader.classList.add('show'); result.style.display = 'none';
       const today = new Date().toISOString().split('T')[0];
-      const prompt = `Coach scolaire. Planning de révision 7 jours.\nExamen: ${exam} | Date: ${date} | Aujourd'hui: ${today} | Heures/jour: ${hours}h | Matières: ${subs}\nJSON valide sans markdown : [{"jour":"Lundi 12 Mai","taches":["Matière : Sujet (Xmin)"]}]\nExactement 7 jours.`;
+      const prompt = `Coach scolaire. Planning de révision 7 jours avec détail des matières ou leçons à réviser.\nExamen: ${exam} | Date: ${date} | Aujourd'hui: ${today} | Heures/jour: ${hours}h | Matières: ${subs}\nJSON valide sans markdown : [{"jour":"Lundi 12 Mai","taches":["Matière : Sujet (Xmin)"]}]\nExactement 7 jours.`;
       const raw = await callClaude(prompt);
       loader.classList.remove('show');
       console.log('Réponse brute du planning:', raw);
