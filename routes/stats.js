@@ -7,8 +7,7 @@ const { appendRow, getRows, updateCell } = require('../services/sheets');
 router.get('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const rows = await getRows('Stats!A:E');
-
+    const rows = await getRows('Sheet2!A:E');
     // Chercher l'utilisateur
     const userRow = rows.find(r => r[0] === userId);
     if (!userRow) {
@@ -28,8 +27,14 @@ router.get('/:userId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur get stats:', error);
-    res.status(500).json({ error: 'Erreur stats' });
+    console.error('Erreur get stats:', error.message);
+    // res.status(500).json({ error: 'Erreur stats' });
+    res.json({
+      fiches: 0,
+      questions: 0,
+      score_moyen: 0,
+      sessions: 0
+    });
   }
 });
 
@@ -37,14 +42,14 @@ router.get('/:userId', async (req, res) => {
 router.post('/update', async (req, res) => {
   try {
     const { userId, action, value } = req.body;
-    const rows = await getRows('Stats!A:E');
+    const rows = await getRows('Sheet2!A:E');
 
     // Chercher la ligne de l'utilisateur
     const rowIndex = rows.findIndex(r => r[0] === userId);
 
     if (rowIndex === -1) {
       // Nouvel utilisateur — créer une ligne
-      await appendRow('Stats!A:E', [
+      await appendRow('Sheet2!A:E', [
         userId,
         action === 'fiche' ? 1 : 0,
         action === 'question' ? 1 : 0,
